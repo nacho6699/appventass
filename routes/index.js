@@ -4,6 +4,44 @@ var router = express.Router();
 const userObj = require("../database/user");
 const USER = userObj.model;
 const USERSCHEMA = userObj.schema;
+//para seguridad
+var sha1 = require("sha1");
+var jwt = require("jsonwebtoken");
+
+//login dono se genera el token y lo
+router.post("/login", async(req, res, next)=>{
+  var params = req.body;
+  //validadores
+  if(!valid.checkParams({"email":String, "password": String},params)){
+    res.status(300).json({"msj":"Error parametros incorrectos"});
+    return;
+  }
+  var haspassword = sha1(params.password);
+  var docs =await USER.find({email:params.email, password:haspassword});
+  if(docs.length==0){
+    res.status(300).json({"msj":"Error usuario no registrado"});
+    return;
+  }
+  if(docs.length==1){
+    jwt.sign({name:params.email, password:haspassword},"password",(err, token)=>{
+      if(err){
+        res.status(300).json({"msj":"Error en el jwt"});
+        return;
+      }
+      res.status(200).json({"token":token});
+    });
+    return;
+  }
+  
+})
+/*function verifytoken(req, res, next){
+  var token = req.headers["Authorization"];
+  if(token == null){
+    res.status(300).json({"msj": "Error no tiene Acceso"});
+    return;
+  }
+  jwt.verify(token, );
+}*/
 
 //insertando el validador
 const valid = require('../utils/valid');
@@ -17,6 +55,7 @@ router.get('/', function(req, res, next) {
 router.post('/user', async(req, res) =>{
   var params = req.body;
   params['register'] =new Date();
+  params['password']=sha1(params.password);
   //validando los parametros
  
   if(!valid.checkParams(USERSCHEMA, params)){
@@ -97,3 +136,4 @@ router.delete('/user', async(req,res)=>{
   res.status(200).json(result);
 })
 module.exports = router;
+//esto es un ocomentario de jose
