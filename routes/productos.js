@@ -41,8 +41,8 @@ router.post('/productos', async(req, res) =>{
 //###lista un usuario usuarios [GET/user?limit=5]
 //###lista ordenada ascendente y descendente [GET/user?order=asc|order=des]
 
-/*
-router.get('/user', verifytoken,async(req,res)=>{
+
+router.get('/productos',async(req,res)=>{
   var params = req.query; 
   var userId= {};
   var limit = 10;//cantidad a mostrar
@@ -64,10 +64,10 @@ router.get('/user', verifytoken,async(req,res)=>{
       order = 1;
     }
   }
-  var datos = await USER.find(userId).limit(limit).sort({_id:order});
+  var datos = await PRODUCTO.find(userId).limit(limit).sort({_id:order});
   res.status(200).json(datos);
 })
-
+/*
 //el PUT actualiza todo el objeto y el patch solo cierta información
 router.patch('/user', verifytoken,async(req,res)=>{
   if(req.query.id == null){
