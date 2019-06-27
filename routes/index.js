@@ -8,6 +8,9 @@ const USERSCHEMA = userObj.schema;
 var sha1 = require("sha1");
 var jwt = require("jsonwebtoken");
 
+var rols = require("../permisos/chekpermisos");
+var verifytoken = rols.verifytoken;
+
 //login dono se genera el token y lo
 router.post("/login", async(req, res, next)=>{
   var params = req.body;
@@ -34,14 +37,7 @@ router.post("/login", async(req, res, next)=>{
   }
   
 })
-/*function verifytoken(req, res, next){
-  var token = req.headers["Authorization"];
-  if(token == null){
-    res.status(300).json({"msj": "Error no tiene Acceso"});
-    return;
-  }
-  jwt.verify(token, );
-}*/
+
 
 //insertando el validador
 const valid = require('../utils/valid');
@@ -55,7 +51,7 @@ router.get('/', function(req, res, next) {
 router.post('/user', async(req, res) =>{
   var params = req.body;
   params['register'] =new Date();
-  params['password']=sha1(params.password);
+  params["roles"] = ["user"];
   //validando los parametros
  
   if(!valid.checkParams(USERSCHEMA, params)){
@@ -67,6 +63,8 @@ router.post('/user', async(req, res) =>{
     return;
   }
   try{
+  params['password']=sha1(params.password);  
+  
   var user = new USER(params);
   var result = await user.save();
   res.status(200).json(result);
@@ -81,7 +79,7 @@ router.post('/user', async(req, res) =>{
 //###lista un usuario usuarios [GET/user?id=12345]
 //###lista un usuario usuarios [GET/user?limit=5]
 //###lista ordenada ascendente y descendente [GET/user?order=asc|order=des]
-router.get('/user', async(req,res)=>{
+router.get('/user', verifytoken,async(req,res)=>{
   var params = req.query; 
   var userId= {};
   var limit = 10;//cantidad a mostrar
@@ -108,7 +106,7 @@ router.get('/user', async(req,res)=>{
 })
 
 //el PUT actualiza todo el objeto y el patch solo cierta información
-router.patch('/user', (req,res)=>{
+router.patch('/user', verifytoken,async(req,res)=>{
   if(req.query.id == null){
     res.status(300).json({
       msj:"no existe id"
@@ -117,14 +115,20 @@ router.patch('/user', (req,res)=>{
   }
   var id = req.query.id;
   var params = req.body;
-  USER.findOneAndUpdate({_id:id}, params, (err,docs)=>{
+
+  if(params['password']=!null){
+    params['password']=sha1(params.password);  
+  }
+  var users = await USER.findOneAndUpdate({_id:id}, params);
+  res.status(200).json(users);
+  /*USER.findOneAndUpdate({_id:id}, params, (err,docs)=>{
     res.status(200).json(docs);
-  });
+  });*/
 })
 //delete para borrado de usuarios
 //###lista de todos los usuarios [DELETE]
 //###lista un usuario usuarios [DELETE/user?id=12345]
-router.delete('/user', async(req,res)=>{
+router.delete('/user', verifytoken, async(req,res)=>{
   if(req.query.id == null){
     res.status(300).json({
       msj:"no existe id"
