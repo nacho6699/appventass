@@ -4,7 +4,8 @@ var productoSchema = {
     precio:Number,
     cantidad:Number,
     register:Date,
-    img:String
+    img:String,
+    descripcion:String
 }
 const PRODUCTO = mongoose.model("producto", productoSchema);
 //module.exports = USERS;

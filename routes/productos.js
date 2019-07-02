@@ -45,8 +45,15 @@ router.post('/productos', async(req, res) =>{
 router.get('/productos',async(req,res)=>{
   var params = req.query; 
   var userId= {};
+  var buscar= {};
   var limit = 10;//cantidad a mostrar
   var order =-1;
+
+  //ver si existe o no el ide de usuario
+  if(params.buscar != null){
+    buscar ={descripcion:{$regex:params.buscar}};
+  }
+
   //ver si existe o no el ide de usuario
   if(params.id != null){
     userId ={_id:params.id};
@@ -64,7 +71,7 @@ router.get('/productos',async(req,res)=>{
       order = 1;
     }
   }
-  var datos = await PRODUCTO.find(userId).limit(limit).sort({_id:order});
+  var datos = await PRODUCTO.find(buscar).limit(limit).sort({_id:order});
   res.status(200).json(datos);
 })
 /*
