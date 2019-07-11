@@ -7,7 +7,10 @@ const PRODUCTOSCHEMA = productoObj.schema;
 //para seguridad
 const valid = require('../utils/valid');
 var sha1 = require("sha1");
+
 var jwt = require("jsonwebtoken");
+const userObj = require("../database/user");
+const USER = userObj.model;
 
 var rols = require("../permisos/chekpermisos");
 var verifytoken = rols.verifytoken;
@@ -16,21 +19,41 @@ var verifytoken = rols.verifytoken;
 //registrar usuarios
 router.post('/productos', async(req, res) =>{
   var params = req.body;
-  params['register'] =new Date();
-    //validando los parametros
-   if(!valid.checkParams(PRODUCTOSCHEMA, params)){
-    res.status(300).json({msj:"parametros incorrectos"});
+  var token = req.headers["authorization"];
+
+  //verificando su session
+  if(token == null){
+    res.status(300).json({"msj": "Error no tiene Acceso"});
     return;
   }
-
-  try{
-
-  var producto = new PRODUCTO(params);
-  var result = await producto.save();
-  res.status(200).json(result);
-  }catch(e){
-    console.log("el errorrrr esss   "+e);
-  }
+  jwt.verify(token, "password", async(err, auth)=>{
+    if(err){
+      res.status(300).json({"msj":"token invalido"});
+    }
+    var users = await USER.find({email:auth.name});
+    if(users!= null){
+      var userId = users[0]._id;
+      params['register'] =new Date();
+      params['id_user'] = userId;
+      //validando los parametros
+      if(!valid.checkParams(PRODUCTOSCHEMA, params)){
+        res.status(300).json({msj:"parametros incorrectos"});
+        return;
+      }
+      try{
+        //registrando producto
+        var producto = new PRODUCTO(params);
+        var result = await producto.save();
+        res.status(200).json(result);
+        }catch(e){
+          console.log("el errorrrr esss   "+e);
+      }
+    }
+   
+    //res.status(300).json({"msj":"El usuario no cuenta con el permiso para este servicio"});
+    //res.status(200).json(auth);
+  });
+  
 });
 
 //obtener datos get
