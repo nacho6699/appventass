@@ -2,6 +2,7 @@ const mongoose = require("./connect");
 var userSchema = {
     user_name:String,
     email:String,
+    celular:String,
     password:String,
     register:Date,
     roles:Array
